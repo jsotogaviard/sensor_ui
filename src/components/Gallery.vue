@@ -31,8 +31,8 @@ export default {
   computed: {
     computeData() {
       // Empty objects
-      albums.length = 0;
-      images.length = 0;
+      while (albums.length) { albums.pop(); }
+      while (images.length) { images.pop(); }
 
       var album = "";
       if (this.$route.params.pathMatch) {
@@ -51,7 +51,6 @@ export default {
         if (err) {
           console.log(JSON.stringify(err));
         } else {
-          console.log(JSON.stringify(data));
 
           // Retrieve folders
           for (var i in data.CommonPrefixes) {
@@ -66,6 +65,7 @@ export default {
           }
         }
       });
+      console.log(JSON.stringify(albums))
       return {
         albums: albums,
         images: images,

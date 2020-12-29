@@ -4,7 +4,7 @@
     <img
       class="image"
       v-for="(album, i) in albums"
-      :src="album"
+      :alt="album"
       :key="i"
       @click="goTo(album)"
     />
@@ -17,8 +17,7 @@ export default {
   props: ['albums'],
   methods: { 
     goTo (name) { 
-      console.log(name)
-      this.$router.replace({name}); 
+      this.$router.replace(name); 
     } 
   } 
 };
