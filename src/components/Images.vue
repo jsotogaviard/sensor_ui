@@ -1,6 +1,6 @@
 <template>
   <div id=image>
-    <div>IMAGES</div>
+    <div class="imagecss">IMAGES</div>
     <img
       class="image"
       v-for="(image, i) in images"
@@ -43,5 +43,14 @@ export default {
   border-radius: 3px;
   border: 1px solid lightgray;
   object-fit: contain;
+}
+.imagecss {
+  color: #060354;
+  font-family: "Raleway", sans-serif;
+  font-size: 62px;
+  font-weight: 800;
+  line-height: 72px;
+  margin: 0 0 24px;
+  text-transform: uppercase;
 }
 </style>

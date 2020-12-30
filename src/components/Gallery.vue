@@ -31,8 +31,12 @@ export default {
   computed: {
     computeData() {
       // Empty objects
-      while (albums.length) { albums.pop(); }
-      while (images.length) { images.pop(); }
+      while (albums.length) {
+        albums.pop();
+      }
+      while (images.length) {
+        images.pop();
+      }
 
       var album = "";
       if (this.$route.params.pathMatch) {
@@ -51,7 +55,6 @@ export default {
         if (err) {
           console.log(JSON.stringify(err));
         } else {
-
           // Retrieve folders
           for (var i in data.CommonPrefixes) {
             var name = data.CommonPrefixes[i].Prefix;
@@ -61,11 +64,12 @@ export default {
           // Retrieve files
           for (var j in data.Contents) {
             var image = config.s3.url + data.Contents[j].Key;
-            images.push(image);
+            if (isImage(image)) {
+              images.push(image);
+            }
           }
         }
       });
-      console.log(JSON.stringify(albums))
       return {
         albums: albums,
         images: images,
@@ -73,4 +77,8 @@ export default {
     },
   },
 };
+
+function isImage(file) {
+  return file.endsWith(".jpg") || file.endsWith(".mp4") || file.endsWith(".mov");
+}
 </script>
