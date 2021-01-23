@@ -28,6 +28,7 @@ var config1 = {
     yTicks: 3,
   },
 };
+
 export default {
   name: "Rooms",
   components: {
@@ -52,6 +53,9 @@ export default {
           console.log(JSON.stringify(err));
         } else {
           // Retrieve content of all files
+          var tmpData = [];
+          var count = 0;
+          const filesNumber = data.Contents.length;
           for (var i in data.Contents) {
             var csvFile = data.Contents[i].Key;
             const fileParams = {
@@ -64,17 +68,39 @@ export default {
               csv()
                 .fromString(string)
                 .then((jsonObj) => {
-                  var i= 0
-                  const unique = [
-                    ...new Set(jsonObj.map((item) => item.mac)),
-                  ];
-                  jsonObj.forEach(function (element) {
-                    unique.forEach(function (mac) {
-                      element[mac] = i++;
+                  count++;
+                  tmpData.push(...jsonObj);
+                  if (count == filesNumber) {
+                    // On the latest call
+                    // reo organize data
+                    const uniqueMacs = [
+                      ...new Set(tmpData.map((item) => item.mac)),
+                    ];
+
+                    // Init current data
+                    var currentData = {};
+                    tmpData.forEach(function (element) {
+                      uniqueMacs.forEach(function (mac) {
+                        if (!currentData[mac] && element[mac]) {
+                          currentData[mac] = element.temperature
+                        } 
+                      });
                     });
-                  });
-                  bleData.push(...jsonObj);
-                  config1.values = unique
+
+                    // Augment with current data
+                    tmpData.forEach(function (element) {
+                      uniqueMacs.forEach(function (mac) {
+                        if (element[mac]) {
+                          currentData[mac] = element.temperature
+                        } 
+                        Object.assign(element, currentData);
+                      });
+                    });
+
+                    bleData.push(...tmpData)
+
+                    config1.values = unique;
+                  }
                 });
             });
           }
