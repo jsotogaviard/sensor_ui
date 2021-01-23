@@ -1,9 +1,6 @@
 <template>
   <div id="datum">
-    <Data
-      :name="getRooms.config1"
-      :data="getRooms.data"
-    ></Data>
+    <Data :name="getRooms.config1" :data="getRooms.data"></Data>
   </div>
 </template>
 
@@ -24,7 +21,7 @@ export default {
   },
   data: function () {
     return {
-      datum: datum
+      datum: datum,
     };
   },
   computed: {
@@ -35,71 +32,89 @@ export default {
         Prefix: config.out,
         Delimiter: "",
       };
-      s3.listObjects(outParams, function (err, data) {
+      s3.listObjects(outParams, function (err, response) {
         if (err) {
           console.log(JSON.stringify(err));
         } else {
+          response.Prefixes.forEach({
+            function(prefix) {
+              
+              // Init sensor data
+              var data = {
+                name: prefix,
+                data: []
+              }
+              datum.push(data)
+              
+              // List all files in sensor data folder
+              var dataFolderParams = {
+                Bucket: config.s3.bucket,
+                Prefix: config.out+"/"+prefix,
+                Delimiter: "",
+              };
+              s3.listObjects(dataFolderParams, function (err, response) {
+                if (err) {
+                  console.log(JSON.stringify(err));
+                } else {
 
-           s3.listObjects(outParams, function (err, data) {
-        if (err) {
-          console.log(JSON.stringify(err));
-        } else {
-          // Retrieve content of all files
-          var tmpData = [];
-          var count = 0;
-          const filesNumber = data.Contents.length;
-          for (var i in data.Contents) {
-            var csvFile = data.Contents[i].Key;
-            const fileParams = {
-              Bucket: config.s3.bucket,
-              Key: csvFile,
-            };
-            // get csv file and create stream
-            s3.getObject(fileParams, function (err, data) {
-              var string = String.fromCharCode.apply(null, data.Body);
-              csv()
-                .fromString(string)
-                .then((jsonObj) => {
-                  count++;
-                  tmpData.push(...jsonObj);
-                  if (count == filesNumber) {
-                    // On the latest call
-                    // reo organize data
-                    const uniqueMacs = [
-                      ...new Set(tmpData.map((item) => item.mac)),
-                    ];
+                  // Retrieve content of all files
+                  var tmpData = [];
+                  var count = 0;
+                  const filesNumber = response.Contents.length;
+                  for (var i in response.Contents) {
+                    var csvFile = response.Contents[i].Key;
+                    const fileParams = {
+                      Bucket: config.s3.bucket,
+                      Key: csvFile,
+                    };
+                    // get csv file and create stream
+                    s3.getObject(fileParams, function (err, response) {
+                      var string = String.fromCharCode.apply(null, response.Body);
+                      var jsonString = JSON.parse(string)
+                      csv()
+                        .fromString(string)
+                        .then((jsonObj) => {
+                          count++;
+                          tmpData.push(...jsonObj);
+                          if (count == filesNumber) {
+                            // On the latest call
+                            // reo organize data
+                            const uniqueMacs = [
+                              ...new Set(tmpData.map((item) => item.mac)),
+                            ];
 
-                    // Init current data
-                    var currentData = {};
-                    tmpData.forEach(function (element) {
-                      uniqueMacs.forEach(function (mac) {
-                        if (!currentData[mac] && element[mac]) {
-                          currentData[mac] = element.temperature
-                        } 
-                      });
+                            // Init current data
+                            var currentData = {};
+                            tmpData.forEach(function (element) {
+                              uniqueMacs.forEach(function (mac) {
+                                if (!currentData[mac] && element[mac]) {
+                                  currentData[mac] = element.temperature;
+                                }
+                              });
+                            });
+
+                            // Augment with current data
+                            tmpData.forEach(function (element) {
+                              uniqueMacs.forEach(function (mac) {
+                                if (element[mac]) {
+                                  currentData[mac] = element.temperature;
+                                }
+                                Object.assign(element, currentData);
+                              });
+                            });
+
+                            bleData.push(...tmpData);
+
+                            config1.values = unique;
+                          }
+                        });
                     });
-
-                    // Augment with current data
-                    tmpData.forEach(function (element) {
-                      uniqueMacs.forEach(function (mac) {
-                        if (element[mac]) {
-                          currentData[mac] = element.temperature
-                        } 
-                        Object.assign(element, currentData);
-                      });
-                    });
-
-                    bleData.push(...tmpData)
-
-                    config1.values = unique;
                   }
-                });
-            });
-          }
+                }
+              });
+            },
+          });
         }
-        });
-        }
-        
       });
 
       return {
