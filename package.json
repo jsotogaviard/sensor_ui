@@ -13,9 +13,14 @@
     "@fortawesome/vue-fontawesome": "^2.0.2",
     "aws-sdk": "^2.818.0",
     "core-js": "^3.6.5",
+    "csvtojson": "2.0.8",
+    "event-stream": "^4.0.1",
+    "highcharts": "^8.2.2",
     "vue": "^2.6.11",
+    "vue-d3-charts": "^0.2.8",
     "vue-gallery-slideshow": "^1.5.2",
-    "vue-router": "^3.4.9"
+    "vue-router": "^3.4.9",
+    "vue3-highcharts": "^0.1.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
