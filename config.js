@@ -1,12 +1,10 @@
 module.exports = {
   s3 : {
     region: 'us-east-2', 
-    accessKeyId: 'AKIAJ5RYPTXB5YX3CZAA', 
-    secretAccessKey: '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', 
+    accessKeyId: 'AAAKIAI7NTEBC726OOJC4A', 
+    secretAccessKey: 'AA+eCBVqCmmw8TifPx6erBPYT9AA3dMBItJbEGSO/B', 
     bucket: 'sotochassaignetest',
-    in: 'in',
     out: 'out',
     config: 'config.csv',
-
   }
 }
