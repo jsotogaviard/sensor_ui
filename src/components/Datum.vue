@@ -1,8 +1,7 @@
 <template>
   <div id="datum">
-    <button @click="reload">Reload</button>
-    <div v-for="data in getDatum.datum" :key="data.name + data.data.length">
-      <Data :name="data.name" :data="data.data" :sensors="data.sensors"/>
+    <div v-for="data in datum" :key="data.name + data.data.length">
+      <Data :name="data.name" :data="data.data" :sensors="data.sensors" />
     </div>
   </div>
 </template>
@@ -37,7 +36,6 @@ function buildSensorMap(contents) {
   return sensorMap;
 }
 
-var datum = [];
 export default {
   name: "Datum",
   components: {
@@ -45,63 +43,59 @@ export default {
   },
   data: function () {
     return {
-      datum: datum,
+      datum: null,
     };
   },
   methods: {
-    reload() {
-      this.$forceUpdate();
-    },
-  },
-  computed: {
-    getDatum() {
-      // List all folder in bucket out
+    async getSensorData() {
+      const tata = []
+      this.datum=tata
       var bucketParams = {
         Bucket: config.s3.bucket,
         Prefix: "",
         Delimiter: "",
       };
-      s3.listObjects(bucketParams, function (err, response) {
-        if (err) {
-          console.log(JSON.stringify(err));
-        } else {
-          const sensorMap = buildSensorMap(response.Contents);
-          sensorMap.forEach(function (sensor) {
-            var data = {
-              name: sensor.name,
-              files: sensor.files,
-              data: [],
-              sensors: new Set(),
-            };
-            datum.push(data);
-            data.files.forEach(function (file) {
-              const fileParams = {
-                Bucket: config.s3.bucket,
-                Key: file,
-              };
 
-              // read data and push it in the data structure
-              s3.getObject(fileParams, function (err, response) {
-                var string = String.fromCharCode.apply(null, response.Body);
-                var jsonString = JSON.parse(string);
-                const outContents = new Set()
-                 jsonString.content.filter(function (str) {
-                  outContents.add(...Object.keys(str) );
-                });
-                data.sensors.add([
-                  ...outContents
-                ]);
-                data.data.push(...jsonString.content);
-                console.log(JSON.stringify(datum));
-              });
-            });
+      const filesInBucket = await s3
+        .listObjects(bucketParams)
+        .promise()
+        .catch((error) => console.log(JSON.stringify(error)));
+
+      const sensorMap = buildSensorMap(filesInBucket.Contents);
+      sensorMap.forEach(async function (sensor) {
+        var data = {
+          name: sensor.name,
+          files: sensor.files,
+          data: [],
+          sensors: new Set(),
+        };
+        tata.push(data);
+        data.files.forEach(async function (d) {
+          const fileParams = {
+            Bucket: config.s3.bucket,
+            Key: d,
+          };
+
+          const file = await s3
+            .getObject(fileParams)
+            .promise()
+            .catch((error) => console.log(JSON.stringify(error)));
+
+          var string = String.fromCharCode.apply(null, file.Body);
+          var jsonString = JSON.parse(string);
+          const outContents = new Set();
+          jsonString.content.filter(function (str) {
+            outContents.add(...Object.keys(str));
           });
-        }
+          data.sensors.add([...outContents]);
+          data.data.push(...jsonString.content);
+        });
       });
-      return {
-        datum: datum,
-      };
     },
+  },
+  async mounted() {
+    // Get sensor data
+    await this.getSensorData();
   },
 };
 </script>
