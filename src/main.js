@@ -1,13 +1,13 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import App from './App.vue'
-import Datum from './components/Datum.vue';
+import Sensors from './components/Sensors.vue';
 
 Vue.config.productionTip = false
 
 const router = new VueRouter({
   routes: [
-    { path: '/', component: Datum }
+    { path: '/', component: Sensors }
   ]
 })
 
